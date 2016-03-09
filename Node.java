@@ -1,11 +1,19 @@
 import java.util.ArrayList;
 
-
+/**
+ * 
+ * @author TravisWentz & Joe DeBryucker
+ *
+ */
 public class Node {
-	private final int nodeID = 0;
+	private int nodeID;
 	private static ArrayList<Event> localLog = new ArrayList<Event>();
-	private String opType;
+	private String opType; //can be: local, send, receive
 	private String time;
+	
+	public Node(int nodeID){
+		this.nodeID = nodeID;
+	}
 	
 	private void newEvent(){
 		Event event = new Event(opType, time, nodeID);

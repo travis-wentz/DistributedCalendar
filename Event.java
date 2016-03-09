@@ -1,4 +1,8 @@
-
+/**
+ * 
+ * @author TravisWentz & Joe DeBryucker
+ *
+ */
 public class Event {
 	private String op;
 	private String time;
