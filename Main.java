@@ -15,48 +15,113 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
+import javax.swing.JTextField;
 
 
 public class Main extends JFrame implements ActionListener{
+	JFrame f1;
+	JTextField apptName;
+	JRadioButton create;
+	JRadioButton delete;
+	JComboBox<Integer> hourBox;
+	JComboBox<Integer> minuteBox;
+	JComboBox<Integer> dayBox;
+	JComboBox<Integer> monthBox;
+	JRadioButton am;
+	JRadioButton pm;
+	
 	private Main(){
 		
 	}
 	
-	//creates the gui
-	private void gui(){
+	//creates the gui. if int passed in == 1, no appt was entered
+	// if int passed in == 2, appt created interferes with pre-existing one
+	// if int passed in == 3, appt they're trying to delete didn't exist
+	private void gui(int problem){
 		//TODO add text field that shows appointments
-		JFrame f1 = new JFrame("Distributed Calendar");
+		f1 = new JFrame("Distributed Calendar");
 		
+		if(problem == 1){
+			JLabel probLabel = new JLabel("*** PLEASE ENTER AN APPOINTMENT NAME ***");
+			probLabel.setBounds(350, 550, 300, 20);
+			f1.add(probLabel);
+		}else if(problem == 2){
+			JLabel probLabel = new JLabel("*** Try Again: an appointment already exists at that time ***");
+			probLabel.setBounds(350, 550, 300, 20);
+			f1.add(probLabel);
+		}else if(problem == 3){
+			JLabel probLabel = new JLabel("*** Try Again: no appointment exists at that time ***");
+			probLabel.setBounds(350, 550, 300, 20);
+			f1.add(probLabel);
+		}
 		
-		//TODO add day box
-		//TODO add month box
 		//TODO add year box?
-		JComboBox hourBox = new JComboBox();
-		JComboBox minuteBox = new JComboBox();
-		for(int i = 1; i < 13; i++){
-			//hourBox.addItem(i);
-		}
-		for(int i = 1; i < 61; i++){
-			//minuteBox.addItem(i);
-		}
-		//TODO add jlabels for all of the above
 		
-		JRadioButton am = new JRadioButton("am");
-		JRadioButton pm = new JRadioButton("pm");
-		am.setBounds(800,230,80,30);
-		pm.setBounds(800,260,80,30);
+		String text = "create or delete an appointment       ";
+		text += "appointment name:                    ";
+		text += "hour:           minute:                     ";
+		text += "                    day:            month:";
+		JLabel label = new JLabel(text);
+		label.setBounds(25, 575, 970, 20);
+		
+		apptName = new JTextField(20);  //columns, rows
+		apptName.setBounds(250, 605, 175, 20);  //x axis, y axis, width, height
+		
+		create = new JRadioButton("create");
+		delete = new JRadioButton("delete");
+		create.setBounds(50,600,80,30);
+		delete.setBounds(125,600,80,30);
+		ButtonGroup bg2 = new ButtonGroup();
+		bg2.add(create);
+		bg2.add(delete);
+		create.setSelected(true);
+		
+		hourBox = new JComboBox<>();
+		minuteBox = new JComboBox<>();
+		for(int i = 1; i <= 12; i++){
+			hourBox.addItem(new Integer(i));
+		}
+		for(int i = 1; i <= 60; i++){
+			minuteBox.addItem(new Integer(i));
+		}
+		hourBox.setBounds(450, 600, 75, 30);
+		minuteBox.setBounds(525, 600, 75, 30);
+		
+		am = new JRadioButton("am");
+		pm = new JRadioButton("pm");
+		am.setBounds(600,600,80,30);
+		pm.setBounds(650,600,80,30);
 		ButtonGroup bg1 = new ButtonGroup();
 		bg1.add(am);
 		bg1.add(pm);
 		am.setSelected(true);
 		
-		JButton b = new JButton("go");
-		b.setBounds(450,600,100, 40);  //x axis, y axis, width, height
-		b.addActionListener(this);
+		dayBox = new JComboBox<>();
+		monthBox = new JComboBox<>();
+		for(int i = 1; i <= 31; i++){
+			dayBox.addItem(new Integer(i));
+		}
+		for(int i = 1; i <= 12; i++){
+			monthBox.addItem(new Integer(i));
+		}
+		dayBox.setBounds(740, 600, 75, 30);
+		monthBox.setBounds(815, 600, 75, 30);
 		
+		JButton b = new JButton("Submit");
+		b.setBounds(450,650,100, 40);  //x axis, y axis, width, height
+		b.addActionListener(this);
+
+		f1.add(label);
+		f1.add(apptName);
+		f1.add(create);
+		f1.add(delete);
+		f1.add(hourBox);
+		f1.add(minuteBox);
 		f1.add(b);
 		f1.add(am);
 		f1.add(pm);
+		f1.add(dayBox);
+		f1.add(monthBox);
 		
 		f1.setSize(1000,735);  //width, height
 		f1.setLayout(null);
@@ -68,14 +133,35 @@ public class Main extends JFrame implements ActionListener{
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		//send info from combo boxes and radio buttons
-		//close gui(altering gui at runtime is incredably complex)
-		//add or delete
-		//call gui again (this will show the updated log)
+		//frame closes and another will be opened
+		f1.dispose();
+		String appt = apptName.getText();
+		if(appt.equals("")){
+			gui(1);
+			return;
+		}else if(create.isSelected()){
+			//TODO check if event already exists
+//			if(event already exists){
+//				gui(2);
+//				return;
+//			}else{
+//				gui(0);
+//				return;
+//			}
+		}else{
+			//TODO check event they're trying to delete exists
+//			if(!event exists){
+//				gui(3);
+//				return;
+//			}else{
+//				gui(0);
+//				return;
+//			}
+		}
 	}
 
 	public static void main(String[] args) throws IOException {
-		Main main = new Main();
+		Main main = new Main(); //action listener needs an instance
 		//TODO figure out how to assign node IDs
 //		int tempNodeIdAssigner = 0;
 //		
@@ -103,6 +189,6 @@ public class Main extends JFrame implements ActionListener{
 //	        logFile.close();
 //		}
 //		Node node = new Node(tempNodeIdAssigner);
-		main.gui();
+		main.gui(0);
 	}
 }
