@@ -1,20 +1,25 @@
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 
@@ -37,21 +42,34 @@ public class Main extends JFrame implements ActionListener{
 	//creates the gui. if int passed in == 1, no appt was entered
 	// if int passed in == 2, appt created interferes with pre-existing one
 	// if int passed in == 3, appt they're trying to delete didn't exist
-	private void gui(int problem){
+	private void gui(int problem) throws FileNotFoundException{
 		//TODO add text field that shows appointments
 		f1 = new JFrame("Distributed Calendar");
+		File file = new File("log.txt");
+		Scanner in = new Scanner(file);
+		String calendar = "";
+		
+		JTextArea txtArea = new JTextArea();
+		txtArea.setBounds(25, 25, 950, 500);
+		txtArea.setBorder(BorderFactory.createLineBorder(Color.black));
+		while(in.hasNextLine()){
+		    calendar += in.nextLine();
+		    calendar += "\n";
+		}
+		txtArea.setText(calendar);
+		in.close();
 		
 		if(problem == 1){
 			JLabel probLabel = new JLabel("*** PLEASE ENTER AN APPOINTMENT NAME ***");
-			probLabel.setBounds(350, 550, 300, 20);
+			probLabel.setBounds(350, 545, 300, 20);
 			f1.add(probLabel);
 		}else if(problem == 2){
 			JLabel probLabel = new JLabel("*** Try Again: an appointment already exists at that time ***");
-			probLabel.setBounds(350, 550, 300, 20);
+			probLabel.setBounds(350, 545, 300, 20);
 			f1.add(probLabel);
 		}else if(problem == 3){
 			JLabel probLabel = new JLabel("*** Try Again: no appointment exists at that time ***");
-			probLabel.setBounds(350, 550, 300, 20);
+			probLabel.setBounds(350, 545, 300, 20);
 			f1.add(probLabel);
 		}
 		
@@ -111,6 +129,7 @@ public class Main extends JFrame implements ActionListener{
 		b.setBounds(450,650,100, 40);  //x axis, y axis, width, height
 		b.addActionListener(this);
 
+		f1.add(txtArea);
 		f1.add(label);
 		f1.add(apptName);
 		f1.add(create);
@@ -137,7 +156,12 @@ public class Main extends JFrame implements ActionListener{
 		f1.dispose();
 		String appt = apptName.getText();
 		if(appt.equals("")){
-			gui(1);
+			try {
+				gui(1);
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			return;
 		}else if(create.isSelected()){
 			//TODO check if event already exists
