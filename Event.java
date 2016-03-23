@@ -1,28 +1,45 @@
-/**
- * 
- * @author TravisWentz & Joe DeBryucker
- *
- */
+package distlog;
+
 public class Event {
+	private Appointment appointment;
 	private String op;
-	private String time;
+	private int time;
 	private int nodeID;
 	
-	public Event(String op, String time, int nodeID){
+	public Event(Appointment appointment, String op){
+		this.appointment = appointment;
 		this.op = op;
-		this.time = time;
-		this.nodeID = nodeID;
 	}
-	
-	public String getOp(){
+
+	public Appointment getAppointment() {
+		return appointment;
+	}
+
+	public void setAppointment(Appointment appointment) {
+		this.appointment = appointment;
+	}
+
+	public String getOp() {
 		return op;
 	}
-	
-	public String getTime(){
+
+	public void setOp(String op) {
+		this.op = op;
+	}
+
+	public int getTime() {
 		return time;
 	}
-	
-	public int getNodeID(){
+
+	public void setTime(int time) {
+		this.time = time;
+	}
+
+	public int getNodeID() {
 		return nodeID;
+	}
+
+	public void setNodeID(int nodeID) {
+		this.nodeID = nodeID;
 	}
 }
