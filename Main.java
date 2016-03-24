@@ -1,3 +1,4 @@
+package distlog;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,6 +23,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import java.time.*;
+
 
 public class Main extends JFrame implements ActionListener{
 	JFrame f1;
@@ -30,8 +33,10 @@ public class Main extends JFrame implements ActionListener{
 	JRadioButton delete;
 	JComboBox<Integer> hourBox;
 	JComboBox<Integer> minuteBox;
-	JComboBox<Integer> dayBox;
-	JComboBox<Integer> monthBox;
+	JComboBox<DayOfWeek> dayBox;
+	JComboBox<Integer> durationHour;
+	JComboBox<Integer> durationMinute;
+//	JComboBox<Integer> monthBox;
 	JRadioButton am;
 	JRadioButton pm;
 	
@@ -73,8 +78,6 @@ public class Main extends JFrame implements ActionListener{
 			f1.add(probLabel);
 		}
 		
-		//TODO add year box?
-		
 		String text = "create or delete an appointment       ";
 		text += "appointment name:                    ";
 		text += "hour:           minute:                     ";
@@ -114,16 +117,23 @@ public class Main extends JFrame implements ActionListener{
 		bg1.add(pm);
 		am.setSelected(true);
 		
-		dayBox = new JComboBox<>();
-		monthBox = new JComboBox<>();
-		for(int i = 1; i <= 31; i++){
-			dayBox.addItem(new Integer(i));
-		}
-		for(int i = 1; i <= 12; i++){
-			monthBox.addItem(new Integer(i));
-		}
+		dayBox = new JComboBox<>(DayOfWeek.values()); //move this box to top of gui (displays the cur. day)
 		dayBox.setBounds(740, 600, 75, 30);
-		monthBox.setBounds(815, 600, 75, 30);
+		
+//		monthBox = new JComboBox<>();
+//		for(int i = 1; i <= 12; i++){
+//			monthBox.addItem(new Integer(i));
+//		}
+//		monthBox.setBounds(815, 600, 75, 30);
+		
+		durationHour = new JComboBox<>();
+		for(int i = 0; i <= 8; i++){
+			durationHour.addItem(new Integer(i));
+		}
+		
+		durationMinute = new JComboBox<>();
+		durationMinute.addItem(0);
+		durationMinute.addItem(30);
 		
 		JButton b = new JButton("Submit");
 		b.setBounds(450,650,100, 40);  //x axis, y axis, width, height
@@ -140,7 +150,7 @@ public class Main extends JFrame implements ActionListener{
 		f1.add(am);
 		f1.add(pm);
 		f1.add(dayBox);
-		f1.add(monthBox);
+//		f1.add(monthBox);
 		
 		f1.setSize(1000,735);  //width, height
 		f1.setLayout(null);
@@ -184,9 +194,9 @@ public class Main extends JFrame implements ActionListener{
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
-		Main main = new Main(); //action listener needs an instance
-		//TODO figure out how to assign node IDs
+//	public static void main(String[] args) throws IOException {
+//		Main main = new Main(); //action listener needs an instance
+//		//TODO figure out how to assign node IDs
 //		int tempNodeIdAssigner = 0;
 //		
 //		//if the log doesn't exist, create it
@@ -213,6 +223,6 @@ public class Main extends JFrame implements ActionListener{
 //	        logFile.close();
 //		}
 //		Node node = new Node(tempNodeIdAssigner);
-		main.gui(0);
-	}
+//		main.gui(0);
+//	}
 }
