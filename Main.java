@@ -194,7 +194,11 @@ public class Main extends JFrame implements ActionListener{
 		}
 	}
 
+<<<<<<< HEAD
 	public static void main(String[] args) throws IOException {
+=======
+//	public static void main(String[] args) throws IOException {
+>>>>>>> f0d736daeeb3ec8e714aa448575229a9fb30f862
 //		Main main = new Main(); //action listener needs an instance
 //		//TODO figure out how to assign node IDs
 //		int tempNodeIdAssigner = 0;
@@ -224,6 +228,7 @@ public class Main extends JFrame implements ActionListener{
 //		}
 //		Node node = new Node(tempNodeIdAssigner);
 //		main.gui(0);
+<<<<<<< HEAD
 //		SortTime x = SortTime.Mo100;
 //		
 //		
@@ -268,4 +273,7 @@ public class Main extends JFrame implements ActionListener{
 			}
 		}
 	}
+=======
+//	}
+>>>>>>> f0d736daeeb3ec8e714aa448575229a9fb30f862
 }

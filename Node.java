@@ -171,6 +171,7 @@ public class Node {
 				DayOfWeek apptDay = DayOfWeek.MONDAY;
 				System.out.println("Enter event name: ");
 				name = in.nextLine();
+				in.nextLine();
 				System.out.println("Enter day: ");
 				while(dayLoop){
 					String apptDayString = in.nextLine().toUpperCase();
