@@ -63,13 +63,30 @@ public class Node {
 	}
 	
 	//TODO
-	public void eventAdd(String name, DayOfWeek day, LocalTime start, LocalTime end, int[] part){
-		
+	public void eventInsert(String name, DayOfWeek day, LocalTime start, LocalTime end, int[] part){
+		//increment clock
+		clock++;
+		//create appointment and event
+		Appointment appointment = new Appointment(name, day, start, end, part);
+		Event event = new Event(appointment, "insert");
+		//check for conflicts
+		//	if a participant is the same && 
+		//			((aStart > bStart && aStart < bEnd) || (aEnd > bStart && aEnd < bEnd)) throw warning
+		//add event to events log
+		this.log.add(event);
+		//add appointment to calendar
+		this.calendar.add(appointment);
+		//update time table?
+		//save log file to hard drive
 	}
 	
 	//TODO
 	public void eventDelete(String name){
-		
+		//increment clock
+		clock++;
+		//find and delete appointment (appts should be easy to find as they are assumed to have unique names)
+		//update time table?
+		//save log file to hard drive
 	}
 	
 	//returns the log of events (aray list)
@@ -154,8 +171,8 @@ public class Node {
 				DayOfWeek apptDay = DayOfWeek.MONDAY;
 				System.out.println("Enter event name: ");
 				name = in.nextLine();
+				System.out.println("Enter day: ");
 				while(dayLoop){
-					System.out.println("Enter day: ");
 					String apptDayString = in.nextLine().toUpperCase();
 					switch(apptDayString){
 					case "MONDAY":
@@ -214,7 +231,7 @@ public class Node {
 				}
 				LocalTime start = LocalTime.of(sHour, sMinute);
 				LocalTime end = LocalTime.of(eHour, eMinute);
-				node.eventAdd(name, apptDay, start, end, participants);
+				node.eventInsert(name, apptDay, start, end, participants);
 				tryAgain = false;
 				break;
 			case 3:
