@@ -2,69 +2,94 @@ package distlog;
 
 import java.time.*;
 
-public class Appointment {
+public class Appointment implements Comparable<Appointment>{
 	private String name;
 	private DayOfWeek day;
-	private LocalTime start_time;
-	private LocalTime end_time;
+	private LocalTime startTime;
+	private LocalTime endTime;
 	private int[] participants;
 
 	
 	public Appointment(String name, DayOfWeek day, LocalTime start, LocalTime end, int[] part){
 		this.name = name;
 		this.day = day;
-		this.start_time = start;
-		this.end_time = end;
+		this.startTime = start;
+		this.endTime = end;
 		this.participants = part;
 	}
+	
 
-	// Returns the unique name of an appointment
 	public String getName() {
 		return name;
 	}
 
-	// Sets the unique name of an appointment
+
 	public void setName(String name) {
 		this.name = name;
 	}
 
-	// Returns the date of the appointment (only a Day of the week in this implementation)
+
 	public DayOfWeek getDay() {
 		return day;
 	}
 
-	// Sets the day of a week for an appointment, type is java.time.DayOfWeek
+
 	public void setDay(DayOfWeek day) {
 		this.day = day;
 	}
 
-	// Gets the java.time.LocalTime start time of an appointment
-	public LocalTime getStart_time() {
-		return start_time;
+
+	public LocalTime getStartTime() {
+		return startTime;
 	}
 
-	// Sets the java.time.LocalTime start time of an appointment
-	public void setStart_time(LocalTime start_time) {
-		this.start_time = start_time;
+
+	public void setStartTime(LocalTime start_time) {
+		this.startTime = start_time;
 	}
 
-	// Gets the java.time.LocalTime end time of an appointment
-	public LocalTime getEnd_time() {
-		return end_time;
+
+	public LocalTime getEndTime() {
+		return endTime;
 	}
 
-	// Sets the java.time.LocalTime end time of an appointment
-	public void setEnd_time(LocalTime end_time) {
-		this.end_time = end_time;
+
+	public void setEndTime(LocalTime end_time) {
+		this.endTime = end_time;
 	}
 
-	// Gets the integer array of the appointment participants, contains node IDs
+
 	public int[] getParticipants() {
 		return participants;
 	}
 
-	// Sets the integer array of the appointment participants
+
 	public void setParticipants(int[] participants) {
 		this.participants = participants;
+	}
+
+
+	//this stupid method took 8 hours to finally figure out and will sort first by day of week, then by starting time
+	@Override
+	public int compareTo(Appointment b) {
+		if(day.compareTo(b.day) == 0){
+			int aTime = (int) startTime.getHour();
+			aTime *= 100;
+			aTime += (int) startTime.getMinute();
+			
+			int bTime = (int) b.startTime.getHour();
+			bTime *= 100;
+			bTime += (int) b.startTime.getMinute();
+			
+			if(aTime > bTime){
+				return 1;
+			}else if(bTime > aTime){
+				return -1;
+			}else{
+				return 0;
+			}
+		}else{
+			return day.compareTo(b.day);
+		}
 	}
 }
