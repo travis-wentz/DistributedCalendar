@@ -11,6 +11,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.net.*;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
@@ -26,6 +27,7 @@ public class Node {
 	private int[][] timeTable;
 	private ArrayList<Event> log;
 	private ArrayList<Appointment> calendar;
+	private HashMap<Integer, String> otherIPs;
 	
 	public Node(int totalNumberNodes) throws IOException{
 		this.clock = 0;
@@ -107,6 +109,26 @@ public class Node {
 			System.out.println("start - " + curAppt.getStartTime());
 			System.out.println("end  -  " + curAppt.getEndTime());
 		}
+	}
+	
+	// Uses UDP connection to send an XML log to the node specified by nodeID
+	// Can change this to TCP if our logs get too big and UDP starts acting up...
+	private void sendLog(int nodeID, String log) {
+		InetAddress address;
+		try {
+			address = InetAddress.getByName(otherIPs.get(nodeID));
+			byte[] buf = new byte[65000];
+			buf = log.getBytes();
+			DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 4445);
+			DatagramSocket socket = new DatagramSocket();
+			socket.send(packet);
+			socket.close();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	public static void main(String[] args) throws IOException {
