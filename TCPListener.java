@@ -71,7 +71,10 @@ public class TCPListener extends Thread{
 		
 		public void run(){
 			try{
-				// Receive the XML String first
+				// Receive Sender ID
+				int senderID = data.readInt();
+				
+				// Receive the XML String
 				int nb = data.readInt();
 				byte [] digit = new byte[nb];
 				for(int i = 0; i < nb; i++){
@@ -79,7 +82,7 @@ public class TCPListener extends Thread{
 				}
 				String xml = new String(digit);
 				
-				// Then receive the Time Table int[size][size] 
+				// Receive the Time Table int[size][size] 
 				int size = data.readInt();
 				int[][] array = new int[size][size];
 				for(int i = 0; i < size; i++){
@@ -89,7 +92,7 @@ public class TCPListener extends Thread{
 				}
 				
 				// Now do something with them?
-				nodeRef.receiveMessage(xml, array);
+				nodeRef.receiveMessage(senderID, xml, array);
 				
 			} catch(EOFException e) {
 				System.out.println("Here...");

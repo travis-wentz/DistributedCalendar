@@ -28,6 +28,7 @@ import com.thoughtworks.xstream.io.xml.StaxDriver;
 public class Node {
 	private int nodeID;
 	private int clock;
+	private int totalNodes;
 	private int[][] timeTable;
 	private ArrayList<Event> log;
 	private ArrayList<Appointment> calendar;
@@ -36,6 +37,7 @@ public class Node {
 	
 	@SuppressWarnings("unchecked")
 	public Node(int totalNumberNodes) throws IOException{
+		this.totalNodes = totalNumberNodes;
 		this.clock = 0;
 		this.timeTable = new int[totalNumberNodes][totalNumberNodes];
 		this.log = new ArrayList<Event>();
@@ -272,7 +274,9 @@ public class Node {
 	
 	// Method that runs when a new partial log is received from another node
 	// This method is called from the TCPListener thread when a new message is received
-	public void receiveMessage(String xml, int[][] table){
+	public void receiveMessage(int senderID, String xml, int[][] table) throws IOException{
+		
+		// Assemble Log of events we have no record of
 		ArrayList<Event> partialLog = (ArrayList<Event>) xstream.fromXML(xml);
 		ArrayList<Event> newLog = new ArrayList<Event>();
 		for(int i = 0; i < partialLog.size(); i++){
@@ -281,7 +285,60 @@ public class Node {
 			}
 		}
 		
-		//TODO:  update calendar, update TimeTable, update Log
+		// Update calendar(dictionary) by iterating through Log and adding/deleting
+		for(int i = 0; i < newLog.size(); i++) {
+			Event event = (Event)newLog.get(i);
+			if(event.getOp().equals("insert")){
+				// Check for conflicts
+				if(conflictResolution(event.getAppointment())){
+					calendar.add(event.getAppointment());
+					Collections.sort(calendar);
+					// Check if all nodes have seen this event
+					boolean keepEvent = false;
+					for(int j = 0; j < totalNodes; j++){
+						if(!hasRec(event, j)){
+							keepEvent = true;
+						}
+					}
+					if(keepEvent){
+						log.add(event);
+					}
+				}
+			} else {
+				// delete events
+				//find and delete appt (appts are assumed to have unique names)
+				boolean found = false;
+				for(int j = 0; j < calendar.size(); j++) {
+					if(calendar.get(j).getName().equals(event.getAppointment().getName())){
+						calendar.remove(j);
+						found = true;
+					}
+				}
+				if(found){
+					// Check if all nodes have seen this event
+					boolean keepEvent = false;
+					for(int j = 0; j < totalNodes; j++){
+						if(!hasRec(event, j)){
+							keepEvent = true;
+						}
+					}
+					if(keepEvent){
+						log.add(event);
+					}
+				}
+			}
+		}
+		
+		// update TimeTable
+		for(int i = 0; i < totalNodes; i++){
+			timeTable[nodeID][i] = Math.max(timeTable[nodeID][i], table[senderID][i]);
+		}
+		for(int i = 0; i < totalNodes; i++){
+			for(int j = 0; j < totalNodes; j++){
+				timeTable[i][j] = Math.max(timeTable[i][j], table[i][j]);
+			}
+		}
+		
 	}
 	
 	// Uses TCP connection to send an XML log to the node specified by nodeID
@@ -296,11 +353,14 @@ public class Node {
 			BufferedOutputStream bos = new BufferedOutputStream(os);
 			DataOutputStream output = new DataOutputStream(bos);
 			
-			// send XML log first
+			// send ID
+			output.writeInt(nodeID);
+			
+			// send XML log
 			output.writeInt(log.getBytes().length);
 			output.writeBytes(log);
 			
-			// send TimeTable next
+			// send TimeTable
 			output.writeInt(timeTable.length);
 			for(int i = 0; i < timeTable.length; i++){
 				for(int j = 0; j < timeTable.length; j++){
