@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.net.*;
@@ -17,10 +18,6 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 
 
-/*
- * NOTE: an object cannot be added to the end of an arraylist (will result in out of bounds error)
- * 		 I think we are going to have to add it to the beginning of the list, then sort.
- */
 public class Node {
 	private final int nodeID;
 	private int clock;
@@ -37,10 +34,17 @@ public class Node {
 		this.nodeID = 1; // assign this dynamically somehow
 		if(!new File("log.txt").exists()){
 			//create the log file
-			File log = new File("log.txt");
-			FileWriter logFile = new FileWriter(log);
+			File logF = new File("log.txt");
+			FileWriter logFile = new FileWriter(logF);
 			logFile.close();
 		}
+		if(!new File("dictionary.txt").exists()){
+			//create the log file
+			File calendarF = new File("dictionary.txt");
+			FileWriter dictionaryFile = new FileWriter(calendarF);
+			dictionaryFile.close();
+		}
+		//TODO make it read existing log and dictionary to simulate what happens upon failure
 	}
 
 	//logical time (int counter)
@@ -62,34 +66,149 @@ public class Node {
 		this.timeTable = time_table;
 	}
 	
-	//TODO
-	public void eventInsert(String name, DayOfWeek day, LocalTime start, LocalTime end, int[] part){
+	
+	public void eventInsert(String name, DayOfWeek day, LocalTime start, LocalTime end, int[] part) throws IOException{
 		//increment clock
 		clock++;
+		
 		//create appointment and event
 		Appointment appointment = new Appointment(name, day, start, end, part);
 		Event event = new Event(appointment, "insert");
 		//check for conflicts
-		//	if a participant is the same && 
-		//			((aStart > bStart && aStart < bEnd) || (aEnd > bStart && aEnd < bEnd)) throw warning
-		//add event to events log
-		this.log.add(event);
-		//add appointment to calendar
-		this.calendar.add(appointment);
-		//update time table?
-		//save log file to hard drive
+		if(conflictResolution(appointment)){
+			this.log.add(event); //add event to events log
+			this.calendar.add(appointment); //add appointment to calendar
+			Collections.sort(calendar); //sort calendar
+			
+			//TODO update time table?
+			
+			//save log file to hard drive
+			FileWriter logFile = new FileWriter("log.txt");
+			XStream xstream = new XStream(new StaxDriver());
+			String xml = xstream.toXML(log);
+			xml = xstream.toXML(log);
+			logFile.write(xml);
+			logFile.close(); //close the log file
+			
+			//save calendar file to hard drive
+			FileWriter dictionaryFile = new FileWriter("dictionary.txt");
+			XStream xstream2 = new XStream(new StaxDriver());
+			String xml2 = xstream.toXML(calendar);
+			xml2 = xstream2.toXML(calendar);
+			dictionaryFile.write(xml2);
+			dictionaryFile.close(); //close the log file
+		}
 	}
 	
-	//TODO
-	public void eventDelete(String name){
+	//returns true if appointment is to be made (no conflict or original appt is to be deleted and new created)
+	public boolean conflictResolution(Appointment appt) throws IOException{
+		String conflictingAppt = null;
+		boolean conflictFound = false;
+		DayOfWeek aDay = appt.getDay();
+		int aStart = appt.getStartTime().getHour() * 100; // b/c logical operators can't be used on LocalTime
+		aStart += appt.getStartTime().getMinute();
+		int aEnd = appt.getEndTime().getHour() * 100;
+		aEnd += appt.getEndTime().getMinute();
+		
+		for(int i = 0; i < calendar.size(); i++){
+			//if events are on the same day
+			if(aDay == calendar.get(i).getDay()){
+				//if events have same member
+				boolean sameMember = false;
+				int[] aParticipants = appt.getParticipants();
+				int[] bParticipants = calendar.get(i).getParticipants();
+				for(int j = 0; j < aParticipants.length; j++){
+					for(int k = 0; k < bParticipants.length; k++){
+						if(aParticipants[j] == bParticipants[k]){
+							sameMember = true;
+							break;
+						}
+					}
+				}
+				if(sameMember){
+					//if events are at conflicting times
+					int bStart = calendar.get(i).getStartTime().getHour();
+					bStart += calendar.get(i).getStartTime().getMinute();
+					int bEnd = calendar.get(i).getEndTime().getHour();
+					bEnd += calendar.get(i).getEndTime().getMinute();
+					if((aStart >= bStart && aStart < bEnd)  || (aEnd > bStart && aEnd <= bEnd)){
+						conflictingAppt = calendar.get(i).getName();
+						conflictFound = true;
+						break;
+					}
+				}
+			}
+		}
+		if(conflictFound){
+			boolean ask = true;
+			String choice = null;
+			System.out.println("Your new appointment " + appt.getName() 
+					+ " conflicts with an existing appointment " + conflictingAppt);
+			while(ask){
+				System.out.println("Please type the name of the appointment you would like to delete: ");
+				Scanner in = new Scanner(System.in);
+				choice = in.nextLine();
+				in.close();
+				if(choice.equals(appt.getName()) || choice.equals(conflictingAppt)){
+					ask = false;
+				}
+			}
+			if(choice.equalsIgnoreCase(appt.getName())){
+				//all we have to do is return b/c event hasn't been added anywhere yet
+				return false;
+			}else{
+				//delete old event and create new one
+				eventDelete(choice);
+				return true;
+			}
+		}else{
+			return true;
+		}
+	}
+	
+	public void eventDelete(String name) throws IOException{
 		//increment clock
 		clock++;
-		//find and delete appointment (appts should be easy to find as they are assumed to have unique names)
-		//update time table?
+		
+		//find and delete appt (appts are assumed to have unique names)
+		boolean found = false;
+		int index = 0;
+		Appointment deletedAppt = null;
+		while(!found){
+			if(calendar.get(index).getName().equals(name)){
+				deletedAppt = calendar.get(index);
+				calendar.remove(index);
+				found = true;
+			}else{
+				index++;
+			}
+		}
+		
+		//create delete event and add to log
+		Event deleteEvent = new Event(deletedAppt, "delete");
+		log.add(deleteEvent);
+		System.out.println("The appointment " + name + " was deleted.");
+		
+		//TODO update time table?
+		
 		//save log file to hard drive
+		FileWriter logFile = new FileWriter("log.txt");
+		XStream xstream = new XStream(new StaxDriver());
+		String xml = xstream.toXML(log);
+		xml = xstream.toXML(log);
+		logFile.write(xml);
+		logFile.close(); //close the log file
+		
+		//save calendar file to hard drive
+		FileWriter dictionaryFile = new FileWriter("dictionary.txt");
+		XStream xstream2 = new XStream(new StaxDriver());
+		String xml2 = xstream.toXML(calendar);
+		xml2 = xstream2.toXML(calendar);
+		dictionaryFile.write(xml2);
+		dictionaryFile.close(); //close the log file
 	}
 	
-	//returns the log of events (aray list)
+	//TODO do we need this method?
 	public ArrayList<Event> getLog() {
 		return log;
 	}
@@ -97,14 +216,8 @@ public class Node {
 	public void setLog(ArrayList<Event> log) {
 		this.log = log;
 	}
-	
-	//TODO
-	public void addAppointment(){
-		
-	}
-	
 
-	//appointments (dictionary part of the log problem)
+	//TODO do we need this?
 	public ArrayList<Appointment> getCalendar() {
 		return calendar;
 	}
@@ -115,16 +228,24 @@ public class Node {
 	
 	public void printCalendar(){
 		DayOfWeek curDay = DayOfWeek.MONDAY;
-		System.out.println("MONDAY");
 		for(int i = 0; i < calendar.size(); i++){
 			Appointment curAppt = calendar.get(i);
-			if(curAppt.getDay() != curDay){
+			if(i == 0 || curAppt.getDay() != curDay){
+				System.out.println();
 				curDay = calendar.get(i).getDay();
 				System.out.println(curDay);
 			}
-			System.out.println(curAppt.getName());
+			System.out.println(curAppt.getName().toString());
 			System.out.println("start - " + curAppt.getStartTime());
 			System.out.println("end  -  " + curAppt.getEndTime());
+			System.out.print("participants - ");
+			for(int j = 0; j < curAppt.getParticipants().length; j++){
+				if(j != 0){
+					System.out.println(", " + curAppt.getParticipants()[j]);
+				}else{
+					System.out.println(curAppt.getParticipants()[j]);
+				}
+			}
 		}
 	}
 	
@@ -150,28 +271,29 @@ public class Node {
 	
 	public static void main(String[] args) throws IOException {
 		Node node = new Node(4);
-		boolean tryAgain = true;
+		boolean mainMenu = true;
 		String name;
 		System.out.println("Welcome");
 		Scanner in = new Scanner(System.in);
 		do{
 			boolean dayLoop = true;
+			System.out.println();
 			System.out.println("Choose what you would like to do:");
 			System.out.println("1. View my calendar");
 			System.out.println("2. Create an appointment");
 			System.out.println("3. Delete an event");
+			System.out.println("4. Exit");
 			int choice = in.nextInt();
 			//switch statement for what choice the user made
 			switch(choice){
 			case 1:
 				node.printCalendar();
-				tryAgain = false;
 				break;
 			case 2:
 				DayOfWeek apptDay = DayOfWeek.MONDAY;
 				System.out.println("Enter event name: ");
 				name = in.nextLine();
-				in.nextLine();
+				name += in.nextLine();
 				System.out.println("Enter day: ");
 				while(dayLoop){
 					String apptDayString = in.nextLine().toUpperCase();
@@ -210,15 +332,45 @@ public class Node {
 						break;
 					}
 				}
-				//TODO put in loops for all these in case the entered an invalid time
-				System.out.println("Enter start time hour (24 hour clock): ");
-				int sHour = in.nextInt();
-				System.out.println("Enter start time minute (0 or 30): ");
-				int sMinute = in.nextInt();
-				System.out.println("Enter end time hour (24 hour clock): ");
-				int eHour = in.nextInt();
-				System.out.println("Enter end time minute (0 or 30): ");
-				int eMinute = in.nextInt();
+				boolean tryAgain = false;
+				int sHour, sMinute, eHour, eMinute;
+				sHour = sMinute = eHour = eMinute = 0;
+				while(!tryAgain){
+					System.out.println("Enter start time hour (24 hour clock): ");
+					sHour = in.nextInt();
+					if(sHour < 0 || sHour > 24){
+						tryAgain = true;
+					}else{
+						tryAgain = false;
+					}
+				}
+				while(!tryAgain){
+					System.out.println("Enter start time minute (0 or 30): ");
+					sMinute = in.nextInt();
+					if(sMinute != 0 || sMinute != 30){
+						tryAgain = true;
+					}else{
+						tryAgain = false;
+					}
+				}
+				while(!tryAgain){
+					System.out.println("Enter end time hour (24 hour clock): ");
+					eHour = in.nextInt();
+					if(eHour < 0 || eHour > 24){
+						tryAgain = true;
+					}else{
+						tryAgain = false;
+					}
+				}
+				while(!tryAgain){
+					System.out.println("Enter end time minute (0 or 30): ");
+					eMinute = in.nextInt();
+					if(eMinute != 0 || eMinute != 30){
+						tryAgain = true;
+					}else{
+						tryAgain = false;
+					}
+				}
 				System.out.println("Number of participants: ");
 				int numPart = in.nextInt();
 				int[] participants = new int[numPart];
@@ -233,20 +385,24 @@ public class Node {
 				LocalTime start = LocalTime.of(sHour, sMinute);
 				LocalTime end = LocalTime.of(eHour, eMinute);
 				node.eventInsert(name, apptDay, start, end, participants);
-				tryAgain = false;
 				break;
 			case 3:
 				System.out.println("Enter event name: ");
 				name = in.nextLine();
+				name += in.nextLine();
 				node.eventDelete(name);
-				tryAgain = false;
+				break;
+			case 4:
+				System.out.println("goodbye");
+				mainMenu = false;
 				break;
 			default:
 				System.out.println("please choose a valid menu option");
 				tryAgain = true;
 				break;
 			}
-		}while(tryAgain);
+		}while(mainMenu);
+		in.close();
 		//if the log file doesn't exist, create it
 		//else open it and read it
 //		if(!new File("log.txt").exists()){
