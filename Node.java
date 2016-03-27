@@ -1,11 +1,14 @@
 package distlog;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -28,19 +31,22 @@ public class Node {
 	private ArrayList<Event> log;
 	private ArrayList<Appointment> calendar;
 	private HashMap<Integer, String> otherIPs;
+	private XStream xstream;
 	
 	public Node(int totalNumberNodes) throws IOException{
 		this.clock = 0;
 		this.timeTable = new int[totalNumberNodes][totalNumberNodes];
 		this.log = new ArrayList<Event>();
 		this.calendar = new ArrayList<Appointment>();		
-		this.nodeID = 1; // assign this dynamically somehow
+		this.nodeID = 0; // assign this dynamically somehow
 		if(!new File("log.txt").exists()){
 			//create the log file
 			File log = new File("log.txt");
 			FileWriter logFile = new FileWriter(log);
 			logFile.close();
 		}
+		otherIPs = new HashMap<Integer, String>();
+		xstream = new XStream(new StaxDriver());
 	}
 
 	//logical time (int counter)
@@ -135,30 +141,65 @@ public class Node {
 	}
 	
 	// Method that runs when a new partial log is received from another node
+	// This method is called from the TCPListener thread when a new message is received
+	public void receiveMessage(String xml, int[][] table){
+		ArrayList<Event> partialLog = (ArrayList<Event>) xstream.fromXML(xml);
+		ArrayList<Event> newLog = new ArrayList<Event>();
+		for(int i = 0; i < partialLog.size(); i++){
+			if(!hasRec(partialLog.get(i), nodeID)){
+				newLog.add(partialLog.get(i));
+			}
+		}
+		
+		//TODO:  update calendar, update TimeTable, update Log
+	}
 	
-	
-	// Uses UDP connection to send an XML log to the node specified by nodeID
-	// Can change this to TCP if our logs get too big and UDP starts acting up...
+	// Uses TCP connection to send an XML log to the node specified by nodeID
+	// Also sends the local copy of the TimeTable[][]
 	private void sendLog(int nodeID, String log) {
 		InetAddress address;
+		Socket socket = null;
 		try {
 			address = InetAddress.getByName(otherIPs.get(nodeID));
-			byte[] buf = new byte[65000];
-			buf = log.getBytes();
-			DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 4445);
-			DatagramSocket socket = new DatagramSocket();
-			socket.send(packet);
-			socket.close();
+			socket = new Socket(address, 4445);
+			OutputStream os = socket.getOutputStream();
+			BufferedOutputStream bos = new BufferedOutputStream(os);
+			DataOutputStream output = new DataOutputStream(bos);
+			
+			// send XML log first
+			output.writeInt(log.getBytes().length);
+			output.writeBytes(log);
+			
+			// send TimeTable next
+			output.writeInt(timeTable.length);
+			for(int i = 0; i < timeTable.length; i++){
+				for(int j = 0; j < timeTable.length; j++){
+					output.writeInt(timeTable[i][j]);
+				}
+			}
+			output.close();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			if(socket != null){
+				try {
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		
 	}
 	
 	public static void main(String[] args) throws IOException {
 		Node node = new Node(4);
+		TCPListener tcplistener = new TCPListener(node);
+		tcplistener.start();
+		node.otherIPs.put(1, "54.152.162.118");
+
 		boolean tryAgain = true;
 		String name;
 		System.out.println("Welcome");
@@ -257,6 +298,10 @@ public class Node {
 				break;
 			}
 		}while(tryAgain);
+		
+		tcplistener.shutDown();
+		
+		
 		//if the log file doesn't exist, create it
 		//else open it and read it
 //		if(!new File("log.txt").exists()){
