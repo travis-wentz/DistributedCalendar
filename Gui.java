@@ -26,7 +26,7 @@ import javax.swing.JTextField;
 import java.time.*;
 
 
-public class Main extends JFrame implements ActionListener{
+public class Gui extends JFrame implements ActionListener{
 	JFrame f1;
 	JTextField apptName;
 	JRadioButton create;
@@ -40,7 +40,7 @@ public class Main extends JFrame implements ActionListener{
 	JRadioButton am;
 	JRadioButton pm;
 	
-	private Main(){
+	private Gui(){
 		
 	}
 	
@@ -193,87 +193,4 @@ public class Main extends JFrame implements ActionListener{
 //			}
 		}
 	}
-
-<<<<<<< HEAD
-	public static void main(String[] args) throws IOException {
-=======
-//	public static void main(String[] args) throws IOException {
->>>>>>> f0d736daeeb3ec8e714aa448575229a9fb30f862
-//		Main main = new Main(); //action listener needs an instance
-//		//TODO figure out how to assign node IDs
-//		int tempNodeIdAssigner = 0;
-//		
-//		//if the log doesn't exist, create it
-//		//else open it and get the node ID
-//		if(!new File("log.txt").exists()){
-//			File log = new File("log.txt");
-//			FileWriter logFile = new FileWriter(log);
-//			String line = "Node ID: ";
-//			tempNodeIdAssigner++;
-//			line += tempNodeIdAssigner;
-//			logFile.write(line);
-//			logFile.close();
-//		}else{
-//			FileInputStream fstream;
-//			fstream = new FileInputStream("log.txt");
-//			BufferedReader logFile = new BufferedReader(new InputStreamReader(fstream));
-//			String line = logFile.readLine();
-//			Pattern pattern = Pattern.compile("\\d+");
-//	        Matcher match = pattern.matcher(line); //getting node id num from file
-//	        match.find();
-//	        tempNodeIdAssigner = Integer.parseInt(match.group()); //recording id num
-////	        System.out.println(line);
-////	        System.out.println(tempNodeIdAssigner);
-//	        logFile.close();
-//		}
-//		Node node = new Node(tempNodeIdAssigner);
-//		main.gui(0);
-<<<<<<< HEAD
-//		SortTime x = SortTime.Mo100;
-//		
-//		
-		int num = 0;
-		for(int i = 0; i < 7; i++){
-			String day = "";
-			switch(i){
-			case 0:
-				day = "MONDAY";
-				break;
-			case 1:
-				day = "TUESDAY";
-				break;
-			case 2:
-				day = "WEDNESDAY";
-				break;
-			case 3:
-				day = "THURSDAY";
-				break;
-			case 4:
-				day = "FRIDAY";
-				break;
-			case 5:
-				day = "SATURDAY";
-				break;
-			case 6:
-				day = "SUNDAY";
-				break;
-			}
-			for(int j = 0; j < 24; j++){
-//				if(j < 10){
-//					System.out.println(day + "0" + j + ":00(" + num + "),");
-//					num++;
-//					System.out.println(day + "0" + j + ":30(" + num + "),");
-//					num++;
-//				}else{
-					System.out.println(day + j + "00(" + num + "),");
-					num++;
-					System.out.println(day + j + "30(" + num + "),");
-					num++;
-//				}
-			}
-		}
-	}
-=======
-//	}
->>>>>>> f0d736daeeb3ec8e714aa448575229a9fb30f862
 }
