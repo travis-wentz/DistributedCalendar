@@ -25,7 +25,7 @@ public class Event {
 	public String getOp() {
 		return op;
 	}
-
+	
 	// Sets the operation of the event, a String that is either "Create" or "Delete"
 	public void setOp(String op) {
 		this.op = op;
@@ -35,7 +35,7 @@ public class Event {
 	public int getTime() {
 		return time;
 	}
-
+	
 	// Sets the logical time of an event, an integer value
 	public void setTime(int time) {
 		this.time = time;
