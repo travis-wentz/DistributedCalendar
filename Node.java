@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,6 +17,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.net.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
@@ -30,6 +34,7 @@ public class Node {
 	private HashMap<Integer, String> otherIPs;
 	private XStream xstream;
 	
+	@SuppressWarnings("unchecked")
 	public Node(int totalNumberNodes) throws IOException{
 		this.clock = 0;
 		this.timeTable = new int[totalNumberNodes][totalNumberNodes];
@@ -38,19 +43,28 @@ public class Node {
 		this.nodeID = 0; // assign this dynamically somehow
 		this.otherIPs = new HashMap<Integer, String>();
 		this.xstream = new XStream(new StaxDriver());
+		
 		if(!new File("log.txt").exists()){
 			//create the log file
 			File logF = new File("log.txt");
 			FileWriter logFile = new FileWriter(logF);
 			logFile.close();
+		} else {
+			byte[] encoded = Files.readAllBytes(Paths.get("log.txt"));
+			String xml = new String(encoded, Charset.defaultCharset());
+			log = (ArrayList<Event>) xstream.fromXML(xml);
 		}
+		
 		if(!new File("dictionary.txt").exists()){
 			//create the log file
 			File calendarF = new File("dictionary.txt");
 			FileWriter dictionaryFile = new FileWriter(calendarF);
 			dictionaryFile.close();
+		} else {
+			byte[] encoded = Files.readAllBytes(Paths.get("dictionary.txt"));
+			String xml = new String(encoded, Charset.defaultCharset());
+			calendar = (ArrayList<Appointment>) xstream.fromXML(xml);
 		}
-		//TODO make it read existing log and dictionary to simulate what happens upon failure
 	}
 
 	//logical time (int counter)
@@ -79,7 +93,7 @@ public class Node {
 		
 		//create appointment and event
 		Appointment appointment = new Appointment(name, day, start, end, part);
-		Event event = new Event(appointment, "insert");
+		Event event = new Event(appointment, "insert", clock, nodeID);
 		//check for conflicts
 //		boolean addEvent = conflictResolution(appointment);
 //		if(addEvent){
@@ -88,7 +102,7 @@ public class Node {
 			this.calendar.add(appointment); //add appointment to calendar
 			Collections.sort(calendar); //sort calendar
 			
-			//TODO update time table?
+			timeTable[nodeID][nodeID] = clock;
 			
 			//save log file to hard drive
 			FileWriter logFile = new FileWriter("log.txt");
@@ -167,40 +181,41 @@ public class Node {
 		
 		//find and delete appt (appts are assumed to have unique names)
 		boolean found = false;
-		int index = 0;
 		Appointment deletedAppt = null;
-		while(!found){
-			if(calendar.get(index).getName().equals(name)){
-				deletedAppt = calendar.get(index);
-				calendar.remove(index);
+		for(int i = 0; i < calendar.size(); i++) {
+			if(calendar.get(i).getName().equals(name)){
+				deletedAppt = calendar.get(i);
+				calendar.remove(i);
 				found = true;
-			}else{
-				index++;
 			}
 		}
 		
-		//create delete event and add to log
-		Event deleteEvent = new Event(deletedAppt, "delete");
-		log.add(deleteEvent);
-		System.out.println("The appointment " + name + " was deleted.");
-		
-		//TODO update time table?
-		
-		//save log file to hard drive
-		FileWriter logFile = new FileWriter("log.txt");
-		XStream xstream = new XStream(new StaxDriver());
-		String xml = xstream.toXML(log);
-		xml = xstream.toXML(log);
-		logFile.write(xml);
-		logFile.close(); //close the log file
-		
-		//save calendar file to hard drive
-		FileWriter dictionaryFile = new FileWriter("dictionary.txt");
-		XStream xstream2 = new XStream(new StaxDriver());
-		String xml2 = xstream.toXML(calendar);
-		xml2 = xstream2.toXML(calendar);
-		dictionaryFile.write(xml2);
-		dictionaryFile.close(); //close the log file
+		//create delete event and add to log if event was found
+		if(found){
+			Event deleteEvent = new Event(deletedAppt, "delete", clock, nodeID);
+			log.add(deleteEvent);
+			System.out.println("The appointment " + name + " was deleted.");
+			
+			timeTable[nodeID][nodeID] = clock;
+			
+			//save log file to hard drive
+			FileWriter logFile = new FileWriter("log.txt");
+			XStream xstream = new XStream(new StaxDriver());
+			String xml = xstream.toXML(log);
+			xml = xstream.toXML(log);
+			logFile.write(xml);
+			logFile.close(); //close the log file
+			
+			//save calendar file to hard drive
+			FileWriter dictionaryFile = new FileWriter("dictionary.txt");
+			XStream xstream2 = new XStream(new StaxDriver());
+			String xml2 = xstream.toXML(calendar);
+			xml2 = xstream2.toXML(calendar);
+			dictionaryFile.write(xml2);
+			dictionaryFile.close(); //close the log file
+		} else { // If it wasn't found alert user
+			System.out.println("No appointment found by that name");
+		}
 	}
 	
 	//TODO do we need this method?
@@ -364,7 +379,7 @@ public class Node {
 						dayLoop = true; //just in case
 						break;
 					}
-				}
+			}
 				boolean tryAgain = false;
 				int sHour, sMinute, eHour, eMinute;
 				sHour = sMinute = eHour = eMinute = 0;
@@ -434,7 +449,6 @@ public class Node {
 				System.out.println("please choose a valid menu option");
 				break;
 			}
-//			in.close(); //closing will result in scanner error
 		}while(menu);
 	}
 	

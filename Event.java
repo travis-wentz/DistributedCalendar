@@ -6,9 +6,11 @@ public class Event {
 	private int time;
 	private int nodeID;
 	
-	public Event(Appointment appointment, String op){
+	public Event(Appointment appointment, String op, int t, int n){
 		this.appointment = appointment;
 		this.op = op;
+		this.time = t;
+		this.nodeID = n;
 	}
 
 	// Returns the appointment object associated with an event
