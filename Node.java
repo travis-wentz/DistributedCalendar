@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,6 +17,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.net.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
@@ -45,7 +49,9 @@ public class Node {
 			FileWriter logFile = new FileWriter(logF);
 			logFile.close();
 		} else {
-			// read existing log
+			byte[] encoded = Files.readAllBytes(Paths.get("log.txt"));
+			String xml = new String(encoded, Charset.defaultCharset());
+			log = (ArrayList<Event>) xstream.fromXML(xml);
 		}
 		
 		if(!new File("dictionary.txt").exists()){
@@ -54,9 +60,10 @@ public class Node {
 			FileWriter dictionaryFile = new FileWriter(calendarF);
 			dictionaryFile.close();
 		} else {
-			// read existing calendar
+			byte[] encoded = Files.readAllBytes(Paths.get("dictionary.txt"));
+			String xml = new String(encoded, Charset.defaultCharset());
+			calendar = (ArrayList<Appointment>) xstream.fromXML(xml);
 		}
-		//TODO make it read existing log and dictionary to simulate what happens upon failure
 	}
 
 	//logical time (int counter)
