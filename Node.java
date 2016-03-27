@@ -150,25 +150,12 @@ public class Node {
 		if(conflictFound){
 			boolean ask = true;
 			String choice = null;
+			System.out.println();
+			System.out.println("WARNING:");
 			System.out.println("Your new appointment " + appt.getName() 
 					+ " conflicts with an existing appointment " + conflictingAppt);
-			while(ask){
-				System.out.println("Please type the name of the appointment you would like to delete: ");
-				Scanner in = new Scanner(System.in);
-				choice = in.nextLine();
-				if(choice.equals(appt.getName()) || choice.equals(conflictingAppt)){
-					ask = false;
-				}
-				in.close();
-			}
-			if(choice.equals(appt.getName())){
-				//all we have to do is return b/c event hasn't actually been added anywhere
-				return false;
-			}else{
-				//delete old event and create new one
-				eventDelete(choice);
-				return true;
-			}
+			System.out.println("Please try again or delete existing appointment.");
+			return false;
 		}else{
 			return true;
 		}
@@ -319,134 +306,136 @@ public class Node {
 	}
 	
 	public void menu() throws IOException{
-		String name;
-		Scanner in = new Scanner(System.in);
-		boolean dayLoop = true;
-		System.out.println();
-		System.out.println("Choose what you would like to do:");
-		System.out.println("1. View my calendar");
-		System.out.println("2. Create an appointment");
-		System.out.println("3. Delete an event");
-		System.out.println("4. Exit");
-		int choice = in.nextInt();
-		switch(choice){
-		case 1:
-			printCalendar();
-			menu();
-			break;
-		case 2:
-			DayOfWeek apptDay = DayOfWeek.MONDAY;
-			System.out.println("Enter event name: ");
-			name = in.nextLine();
-			name += in.nextLine();
-			System.out.println("Enter day: ");
-			while(dayLoop){
-				String apptDayString = in.nextLine().toUpperCase();
-				switch(apptDayString){
-				case "MONDAY":
-					apptDay = DayOfWeek.MONDAY;
-					dayLoop = false;
-					break;
-				case "TUESDAY":
-					apptDay = DayOfWeek.TUESDAY;
-					dayLoop = false;
-					break;
-				case "WEDNESDAY":
-					apptDay = DayOfWeek.WEDNESDAY;
-					dayLoop = false;
-					break;
-				case "THURSDAY":
-					apptDay = DayOfWeek.THURSDAY;
-					dayLoop = false;
-					break;
-				case "FRIDAY":
-					apptDay = DayOfWeek.FRIDAY;
-					dayLoop = false;
-					break;
-				case "SATURDAY":
-					apptDay = DayOfWeek.SATURDAY;
-					dayLoop = false;
-					break;
-				case "SUNDAY":
-					apptDay = DayOfWeek.SUNDAY;
-					dayLoop = false;
-					break;
-				default:
-					System.out.println("Enter the day of week again. Spell it right this time: ");
-					dayLoop = true; //just in case
-					break;
+		boolean menu = true;
+		do{
+			String name;
+			Scanner in = new Scanner(System.in); //closing will result in scanner error. DON'T DO IT, MAN!
+			boolean dayLoop = true;
+			System.out.println();
+			System.out.println("Choose what you would like to do:");
+			System.out.println("1. View my calendar");
+			System.out.println("2. Create an appointment");
+			System.out.println("3. Delete an event");
+			System.out.println("4. Exit");
+			int choice = in.nextInt();
+			switch(choice){
+			case 1:
+				printCalendar();
+				break;
+			case 2:
+				DayOfWeek apptDay = DayOfWeek.MONDAY;
+				System.out.println("Enter event name: ");
+				name = in.nextLine();
+				name += in.nextLine();
+				System.out.println("Enter day: ");
+				while(dayLoop){
+					String apptDayString = in.nextLine().toUpperCase();
+					switch(apptDayString){
+					case "MONDAY":
+						apptDay = DayOfWeek.MONDAY;
+						dayLoop = false;
+						break;
+					case "TUESDAY":
+						apptDay = DayOfWeek.TUESDAY;
+						dayLoop = false;
+						break;
+					case "WEDNESDAY":
+						apptDay = DayOfWeek.WEDNESDAY;
+						dayLoop = false;
+						break;
+					case "THURSDAY":
+						apptDay = DayOfWeek.THURSDAY;
+						dayLoop = false;
+						break;
+					case "FRIDAY":
+						apptDay = DayOfWeek.FRIDAY;
+						dayLoop = false;
+						break;
+					case "SATURDAY":
+						apptDay = DayOfWeek.SATURDAY;
+						dayLoop = false;
+						break;
+					case "SUNDAY":
+						apptDay = DayOfWeek.SUNDAY;
+						dayLoop = false;
+						break;
+					default:
+						System.out.println("Enter the day of week again. Spell it right this time: ");
+						dayLoop = true; //just in case
+						break;
+					}
 				}
+				boolean tryAgain = false;
+				int sHour, sMinute, eHour, eMinute;
+				sHour = sMinute = eHour = eMinute = 0;
+				do{
+					System.out.println("Enter start time hour (24 hour clock): ");
+					sHour = in.nextInt();
+					if(sHour < 0 || sHour > 24){
+						tryAgain = true;
+					}else{
+						tryAgain = false;
+					}
+				}while(tryAgain);
+				do{
+					System.out.println("Enter start time minute (00 or 30): ");
+					sMinute = in.nextInt();
+					if(sMinute != 0 && sMinute != 30){
+						tryAgain = true;
+					}else{
+						tryAgain = false;
+					}
+				}while(tryAgain);
+				do{
+					System.out.println("Enter end time hour (24 hour clock): ");
+					eHour = in.nextInt();
+					if(eHour < 0 || eHour > 24){
+						tryAgain = true;
+					}else{
+						tryAgain = false;
+					}
+				}while(tryAgain);
+				do{
+					System.out.println("Enter end time minute (00 or 30): ");
+					eMinute = in.nextInt();
+					if(eMinute != 0 && eMinute != 30){
+						tryAgain = true;
+					}else{
+						tryAgain = false;
+					}
+				}while(tryAgain);
+				//TODO make sure end time is at least a half hour after start time
+				System.out.println("Number of participants: ");
+				int numPart = in.nextInt();
+				int[] participants = new int[numPart];
+				for(int i = 0; i < numPart; i++){
+					if(i == 0){
+						System.out.println("Enter first participant: ");
+					}else{
+						System.out.println("Enter next participant: ");
+					}
+					participants[i] = in.nextInt();
+				}
+				LocalTime start = LocalTime.of(sHour, sMinute);
+				LocalTime end = LocalTime.of(eHour, eMinute);
+				eventInsert(name, apptDay, start, end, participants);
+				break;
+			case 3:
+				System.out.println("Enter event name: ");
+				name = in.nextLine();
+				name += in.nextLine();
+				eventDelete(name);
+				break;
+			case 4:
+				System.out.println("goodbye");
+				menu = false;
+				break;
+			default:
+				System.out.println("please choose a valid menu option");
+				break;
 			}
-			boolean tryAgain = false;
-			int sHour, sMinute, eHour, eMinute;
-			sHour = sMinute = eHour = eMinute = 0;
-			do{
-				System.out.println("Enter start time hour (24 hour clock): ");
-				sHour = in.nextInt();
-				if(sHour < 0 || sHour > 24){
-					tryAgain = true;
-				}else{
-					tryAgain = false;
-				}
-			}while(tryAgain);
-			do{
-				System.out.println("Enter start time minute (0 or 30): ");
-				sMinute = in.nextInt();
-				if(sMinute != 0 && sMinute != 30){
-					tryAgain = true;
-				}else{
-					tryAgain = false;
-				}
-			}while(tryAgain);
-			do{
-				System.out.println("Enter end time hour (24 hour clock): ");
-				eHour = in.nextInt();
-				if(eHour < 0 || eHour > 24){
-					tryAgain = true;
-				}else{
-					tryAgain = false;
-				}
-			}while(tryAgain);
-			do{
-				System.out.println("Enter end time minute (0 or 30): ");
-				eMinute = in.nextInt();
-				if(eMinute != 0 && eMinute != 30){
-					tryAgain = true;
-				}else{
-					tryAgain = false;
-				}
-			}while(tryAgain);
-			System.out.println("Number of participants: ");
-			int numPart = in.nextInt();
-			int[] participants = new int[numPart];
-			for(int i = 0; i < numPart; i++){
-				if(i == 0){
-					System.out.println("Enter first participant: ");
-				}else{
-					System.out.println("Enter next participant: ");
-				}
-				participants[i] = in.nextInt();
-			}
-			LocalTime start = LocalTime.of(sHour, sMinute);
-			LocalTime end = LocalTime.of(eHour, eMinute);
-			eventInsert(name, apptDay, start, end, participants);
-			menu();
-			break;
-		case 3:
-			System.out.println("Enter event name: ");
-			name = in.nextLine();
-			eventDelete(name);
-			menu();
-			break;
-		case 4:
-			System.out.println("goodbye");
-			break;
-		default:
-			System.out.println("please choose a valid menu option");
-			menu();
-			break;
-		}
-		in.close();
+//			in.close(); //closing will result in scanner error
+		}while(menu);
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -454,7 +443,7 @@ public class Node {
 		Node node = new Node(4);
 //		TCPListener tcplistener = new TCPListener(node);
 //		tcplistener.start();
-		node.otherIPs.put(1, "54.152.162.118");
+//		node.otherIPs.put(1, "54.152.162.118");
 		node.menu();
 //		tcplistener.shutDown();
 	}
