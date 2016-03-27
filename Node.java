@@ -75,6 +75,8 @@ public class Node {
 		Appointment appointment = new Appointment(name, day, start, end, part);
 		Event event = new Event(appointment, "insert");
 		//check for conflicts
+//		boolean addEvent = conflictResolution(appointment);
+//		if(addEvent){
 		if(conflictResolution(appointment)){
 			this.log.add(event); //add event to events log
 			this.calendar.add(appointment); //add appointment to calendar
@@ -102,6 +104,7 @@ public class Node {
 	
 	//returns true if appointment is to be made (no conflict or original appt is to be deleted and new created)
 	public boolean conflictResolution(Appointment appt) throws IOException{
+		System.out.println("*********CONFLICT RESOLUTION ENTERED**********");
 		String conflictingAppt = null;
 		boolean conflictFound = false;
 		DayOfWeek aDay = appt.getDay();
@@ -154,7 +157,7 @@ public class Node {
 				}
 			}
 			if(choice.equalsIgnoreCase(appt.getName())){
-				//all we have to do is return b/c event hasn't been added anywhere yet
+				//all we have to do is return b/c event hasn't actually been added anywhere
 				return false;
 			}else{
 				//delete old event and create new one
@@ -241,11 +244,12 @@ public class Node {
 			System.out.print("participants - ");
 			for(int j = 0; j < curAppt.getParticipants().length; j++){
 				if(j != 0){
-					System.out.println(", " + curAppt.getParticipants()[j]);
+					System.out.print(", " + curAppt.getParticipants()[j]);
 				}else{
-					System.out.println(curAppt.getParticipants()[j]);
+					System.out.print(curAppt.getParticipants()[j]);
 				}
 			}
+			System.out.println();
 		}
 	}
 	
@@ -284,7 +288,7 @@ public class Node {
 		String name;
 		System.out.println("Welcome");
 		Scanner in = new Scanner(System.in);
-		do{
+		while(mainMenu){
 			boolean dayLoop = true;
 			System.out.println();
 			System.out.println("Choose what you would like to do:");
@@ -301,7 +305,6 @@ public class Node {
 			case 2:
 				DayOfWeek apptDay = DayOfWeek.MONDAY;
 				System.out.println("Enter event name: ");
-				String blank = in.nextLine();
 				name = in.nextLine();
 				name += in.nextLine();
 				System.out.println("Enter day: ");
@@ -345,7 +348,7 @@ public class Node {
 				boolean tryAgain = false;
 				int sHour, sMinute, eHour, eMinute;
 				sHour = sMinute = eHour = eMinute = 0;
-				while(!tryAgain){
+				do{
 					System.out.println("Enter start time hour (24 hour clock): ");
 					sHour = in.nextInt();
 					if(sHour < 0 || sHour > 24){
@@ -353,17 +356,17 @@ public class Node {
 					}else{
 						tryAgain = false;
 					}
-				}
-				while(!tryAgain){
+				}while(tryAgain);
+				do{
 					System.out.println("Enter start time minute (0 or 30): ");
 					sMinute = in.nextInt();
-					if(sMinute != 0 || sMinute != 30){
+					if(sMinute != 0 && sMinute != 30){
 						tryAgain = true;
 					}else{
 						tryAgain = false;
 					}
-				}
-				while(!tryAgain){
+				}while(tryAgain);
+				do{
 					System.out.println("Enter end time hour (24 hour clock): ");
 					eHour = in.nextInt();
 					if(eHour < 0 || eHour > 24){
@@ -371,16 +374,16 @@ public class Node {
 					}else{
 						tryAgain = false;
 					}
-				}
-				while(!tryAgain){
+				}while(tryAgain);
+				do{
 					System.out.println("Enter end time minute (0 or 30): ");
 					eMinute = in.nextInt();
-					if(eMinute != 0 || eMinute != 30){
+					if(eMinute != 0 && eMinute != 30){
 						tryAgain = true;
 					}else{
 						tryAgain = false;
 					}
-				}
+				}while(tryAgain);
 				System.out.println("Number of participants: ");
 				int numPart = in.nextInt();
 				int[] participants = new int[numPart];
@@ -411,7 +414,7 @@ public class Node {
 				tryAgain = true;
 				break;
 			}
-		}while(mainMenu);
+		}
 		in.close();
 		//if the log file doesn't exist, create it
 		//else open it and read it
