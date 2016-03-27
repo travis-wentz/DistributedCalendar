@@ -26,7 +26,7 @@ import com.thoughtworks.xstream.io.xml.StaxDriver;
 
 
 public class Node {
-	private final int nodeID;
+	private int nodeID;
 	private int clock;
 	private int[][] timeTable;
 	private ArrayList<Event> log;
@@ -38,8 +38,7 @@ public class Node {
 		this.clock = 0;
 		this.timeTable = new int[totalNumberNodes][totalNumberNodes];
 		this.log = new ArrayList<Event>();
-		this.calendar = new ArrayList<Appointment>();		
-		this.nodeID = 0; // assign this dynamically somehow
+		this.calendar = new ArrayList<Appointment>();
 		this.otherIPs = new HashMap<Integer, String>();
 		this.xstream = new XStream(new StaxDriver());
 		
@@ -64,6 +63,11 @@ public class Node {
 			String xml = new String(encoded, Charset.defaultCharset());
 			calendar = (ArrayList<Appointment>) xstream.fromXML(xml);
 		}
+	}
+	
+	// Set the node ID, I removed FINAL from nodeID so we can assign this to each node when we start them
+	public void setID(int id){
+		this.nodeID = id;
 	}
 
 	//logical time (int counter)
@@ -466,12 +470,17 @@ public class Node {
 	
 	public static void main(String[] args) throws IOException {
 		System.out.println("Welcome");
+		System.out.println("Which node is this? (0-3)");
+		Scanner quickscan = new Scanner(System.in);
+		int id = quickscan.nextInt();
 		Node node = new Node(4);
+		node.setID(id);
 //		TCPListener tcplistener = new TCPListener(node);
 //		tcplistener.start();
-		node.otherIPs.put(1, "54.152.162.118");
+		node.otherIPs.put(1, "54.152.162.118"); // use this to populate IPs for all nodes
 		node.menu();
 //		tcplistener.shutDown();
+		quickscan.close();
 	}
 
 }
