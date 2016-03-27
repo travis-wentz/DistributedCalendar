@@ -249,6 +249,15 @@ public class Node {
 		}
 	}
 	
+	// Checks the local time table to see if one of the nodes already has
+	// the record of a particular event, used to create partial logs
+	private boolean hasRec(Event event, int nodeID){
+		return timeTable[nodeID][event.getNodeID()] >= event.getTime();
+	}
+	
+	// Method that runs when a new partial log is received from another node
+	
+	
 	// Uses UDP connection to send an XML log to the node specified by nodeID
 	// Can change this to TCP if our logs get too big and UDP starts acting up...
 	private void sendLog(int nodeID, String log) {
@@ -292,6 +301,7 @@ public class Node {
 			case 2:
 				DayOfWeek apptDay = DayOfWeek.MONDAY;
 				System.out.println("Enter event name: ");
+				String blank = in.nextLine();
 				name = in.nextLine();
 				name += in.nextLine();
 				System.out.println("Enter day: ");
