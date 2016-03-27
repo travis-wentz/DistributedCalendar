@@ -92,7 +92,7 @@ public class Node {
 		
 		//create appointment and event
 		Appointment appointment = new Appointment(name, day, start, end, part);
-		Event event = new Event(appointment, "insert");
+		Event event = new Event(appointment, "insert", clock, nodeID);
 		//check for conflicts
 //		boolean addEvent = conflictResolution(appointment);
 //		if(addEvent){
@@ -101,7 +101,7 @@ public class Node {
 			this.calendar.add(appointment); //add appointment to calendar
 			Collections.sort(calendar); //sort calendar
 			
-			//TODO update time table?
+			timeTable[nodeID][nodeID] = clock;
 			
 			//save log file to hard drive
 			FileWriter logFile = new FileWriter("log.txt");
@@ -204,11 +204,11 @@ public class Node {
 		
 		//create delete event and add to log if event was found
 		if(found){
-			Event deleteEvent = new Event(deletedAppt, "delete");
+			Event deleteEvent = new Event(deletedAppt, "delete", clock, nodeID);
 			log.add(deleteEvent);
 			System.out.println("The appointment " + name + " was deleted.");
 			
-			//TODO update time table?
+			timeTable[nodeID][nodeID] = clock;
 			
 			//save log file to hard drive
 			FileWriter logFile = new FileWriter("log.txt");
@@ -397,7 +397,7 @@ public class Node {
 			do{
 				System.out.println("Enter start time hour (24 hour clock): ");
 				sHour = in.nextInt();
-				if(sHour < 0 || sHour > 24){
+				if(sHour < 0 || sHour >= 24){
 					tryAgain = true;
 				}else{
 					tryAgain = false;
@@ -415,7 +415,7 @@ public class Node {
 			do{
 				System.out.println("Enter end time hour (24 hour clock): ");
 				eHour = in.nextInt();
-				if(eHour < 0 || eHour > 24 || eHour < sHour){
+				if(eHour < 0 || eHour >= 24 || eHour < sHour){
 					tryAgain = true;
 				}else{
 					tryAgain = false;
