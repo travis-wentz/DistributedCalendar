@@ -295,10 +295,11 @@ public class Node {
 			Event event = (Event)partialLog.get(i);
 			if(event.getOp().equals("insert")){
 				// Check for conflicts
-				// TODO:  standardize conflict resolution?
 				if(conflictResolution(event.getAppointment())){
 					calendar.add(event.getAppointment());
 					Collections.sort(calendar);
+				} else {
+					// TODO:  standardize conflict resolution?
 				}
 			} else {
 				// delete events
@@ -546,12 +547,14 @@ public class Node {
 		System.out.println("Which node is this? (0-3)");
 		Scanner quickscan = new Scanner(System.in);
 		int id = quickscan.nextInt();
-		Node node = new Node(2);
+		Node node = new Node(4);
 		node.setID(id);
 		TCPListener tcplistener = new TCPListener(node);
 		tcplistener.start();
-		node.otherIPs.put(0, "52.91.27.132");
-		node.otherIPs.put(1, "54.152.162.118");
+		node.otherIPs.put(0, "54.172.20.219");
+		node.otherIPs.put(1, "54.175.243.93");
+		node.otherIPs.put(2, "52.38.32.251");
+		node.otherIPs.put(3, "52.27.249.225");
 		node.menu();
 		tcplistener.shutDown();
 		quickscan.close();
