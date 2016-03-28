@@ -100,22 +100,23 @@ public class Node {
 	
 	
 	public void eventInsert(String name, DayOfWeek day, LocalTime start, LocalTime end, int[] part) throws IOException{
-		//increment clock
-		clock++;
 		
 		//create appointment and event
 		Appointment appointment = new Appointment(name, day, start, end, part);
-		Event event = new Event(appointment, "insert", clock, nodeID);
+		Event event = new Event(appointment, "insert", clock+1, nodeID);
+		
 		//check for conflicts
-//		boolean addEvent = conflictResolution(appointment);
-//		if(addEvent){
 		if(conflictResolution(appointment)){
+			//increment clock
+			clock++;
 			this.log.add(event); //add event to events log
 			this.calendar.add(appointment); //add appointment to calendar
 			Collections.sort(calendar); //sort calendar
 			
+			// update timetable
 			timeTable[nodeID][nodeID] = clock;
 			
+			// save
 			saveToDisk();
 			
 			// If other nodes need to be notified, create partial log and send
@@ -195,9 +196,7 @@ public class Node {
 	}
 	
 	public void eventDelete(String name) throws IOException{
-		//increment clock
-		clock++;
-		
+				
 		//find and delete appt (appts are assumed to have unique names)
 		boolean found = false;
 		Appointment deletedAppt = null;
@@ -211,6 +210,8 @@ public class Node {
 		
 		//create delete event and add to log if event was found
 		if(found){
+			//increment clock
+			clock++;
 			Event deleteEvent = new Event(deletedAppt, "delete", clock, nodeID);
 			log.add(deleteEvent);
 			System.out.println("The appointment " + name + " was deleted.");
@@ -270,9 +271,10 @@ public class Node {
 	}
 	
 	// Checks the local time table to see if one of the nodes already has
-	// the record of a particular event, used to create partial logs
+	// the record of a particular event, used to create partial logs before sending
 	private boolean hasRec(Event event, int nodeID){
-		return timeTable[nodeID][event.getNodeID()] >= event.getTime();
+		boolean has = timeTable[nodeID][event.getNodeID()] >= event.getTime();
+		return has;
 	}
 	
 	// Method that runs when a new partial log is received from another node
@@ -280,33 +282,23 @@ public class Node {
 	public void receiveMessage(int senderID, String xml, int[][] table) throws IOException{
 		
 		// Assemble Log of events we have no record of
-		ArrayList<Event> partialLog = (ArrayList<Event>) xstream.fromXML(xml);
-		ArrayList<Event> newLog = new ArrayList<Event>();
-		for(int i = 0; i < partialLog.size(); i++){
-			if(!hasRec(partialLog.get(i), nodeID)){
-				newLog.add(partialLog.get(i));
+		ArrayList<Event> receivedLog = (ArrayList<Event>) xstream.fromXML(xml);
+		ArrayList<Event> partialLog = new ArrayList<Event>();
+		for(int i = 0; i < receivedLog.size(); i++){
+			if(!hasRec(receivedLog.get(i), nodeID)){
+				partialLog.add(receivedLog.get(i));
 			}
 		}
 		
-		// Update calendar(dictionary) by iterating through Log and adding/deleting
-		for(int i = 0; i < newLog.size(); i++) {
-			Event event = (Event)newLog.get(i);
+		// Update calendar(dictionary) by iterating through received log and adding/deleting
+		for(int i = 0; i < partialLog.size(); i++) {
+			Event event = (Event)partialLog.get(i);
 			if(event.getOp().equals("insert")){
 				// Check for conflicts
 				// TODO:  standardize conflict resolution?
 				if(conflictResolution(event.getAppointment())){
 					calendar.add(event.getAppointment());
 					Collections.sort(calendar);
-					// Check if all nodes have seen this event
-					boolean keepEvent = false;
-					for(int j = 0; j < totalNodes; j++){
-						if(!hasRec(event, j)){
-							keepEvent = true;
-						}
-					}
-					if(keepEvent){
-						log.add(event);
-					}
 				}
 			} else {
 				// delete events
@@ -318,25 +310,26 @@ public class Node {
 						found = true;
 					}
 				}
-				if(found){
-					// Check if all nodes have seen this event
-					boolean keepEvent = false;
-					for(int j = 0; j < totalNodes; j++){
-						if(!hasRec(event, j)){
-							keepEvent = true;
-						}
-					}
-					if(keepEvent){
-						log.add(event);
-					}
-				}
 			}
 		}
 		
-		// Save!
-		saveToDisk();
-		
 		// update TimeTable
+		System.out.println("Updating Time tables");
+		System.out.println("Local Table:");
+		for(int i = 0; i < totalNodes; i++){
+			for(int j = 0; j < totalNodes; j++){
+				System.out.print(timeTable[i][j]);
+			}
+			System.out.println("");
+		}
+		System.out.println("Printing received timetable:" + senderID);
+		for(int i = 0; i < totalNodes; i++){
+			for(int j = 0; j < totalNodes; j++){
+				System.out.print(table[i][j]);
+			}
+			System.out.println("");
+		}
+		
 		for(int i = 0; i < totalNodes; i++){
 			timeTable[nodeID][i] = Math.max(timeTable[nodeID][i], table[senderID][i]);
 		}
@@ -346,15 +339,40 @@ public class Node {
 			}
 		}
 		
+		// Rebuild local log, discard events that all nodes know of
+		ArrayList<Event> newLog = new ArrayList<Event>();
+		// Go through local log
+		for(int i = 0; i < log.size(); i++){
+			Event event = (Event)log.get(i);
+			for(int j = 0; j < totalNodes; j++){
+				if(!hasRec(event, j)){
+					newLog.add(event);
+				}
+			}
+		}
+		// Go through partial log
+		for(int i = 0; i < partialLog.size(); i++){
+			Event event = (Event)partialLog.get(i);
+			for(int j = 0; j < totalNodes; j++){
+				if(!hasRec(event, j)){
+					newLog.add(event);
+				}
+			}
+		}
+		log = newLog;
+		
+		// Save!
+		saveToDisk();
+		
 	}
 	
 	// Uses TCP connection to send an XML log to the node specified by nodeID
 	// Also sends the local copy of the TimeTable[][]
-	private void sendLog(int nodeID, String log) {
+	private void sendLog(int destination, String log) {
 		InetAddress address;
 		Socket socket = null;
 		try {
-			address = InetAddress.getByName(otherIPs.get(nodeID));
+			address = InetAddress.getByName(otherIPs.get(destination));
 			socket = new Socket(address, 4445);
 			OutputStream os = socket.getOutputStream();
 			BufferedOutputStream bos = new BufferedOutputStream(os);
