@@ -10,7 +10,7 @@ import com.thoughtworks.xstream.io.xml.StaxDriver;
 public class Driver {
 
 	public static void main(String[] args) throws IOException {
-		System.out.println("Welcome");/*
+		System.out.println("Deprecated");/*
 		//if the log file doesn't exist, create it
 		//else open it and read it
 		if(!new File("log.txt").exists()){

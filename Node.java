@@ -1,14 +1,10 @@
 package distlog;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -78,10 +74,6 @@ public class Node {
 		return clock;
 	}
 
-//	public void setClock(int clock) {
-//		this.clock = clock;
-//	}
-
 	//if Main is in Node, we won't need time_table getter or setter
 	//so you know what info other nodes have and what you don't need to send
 	public int[][] getTime_table() {
@@ -90,6 +82,20 @@ public class Node {
 
 	public void setTime_table(int[][] time_table) {
 		this.timeTable = time_table;
+	}
+	
+	public void saveToDisk() throws IOException{
+		//save log file to hard drive
+		FileWriter logFile = new FileWriter("log.txt");
+		String xml = xstream.toXML(log);
+		logFile.write(xml);
+		logFile.close(); //close the log file
+		
+		//save calendar file to hard drive
+		FileWriter dictionaryFile = new FileWriter("dictionary.txt");
+		String xml2 = xstream.toXML(calendar);
+		dictionaryFile.write(xml2);
+		dictionaryFile.close(); //close the log file
 	}
 	
 	
@@ -110,21 +116,7 @@ public class Node {
 			
 			timeTable[nodeID][nodeID] = clock;
 			
-			//save log file to hard drive
-			FileWriter logFile = new FileWriter("log.txt");
-			XStream xstream = new XStream(new StaxDriver());
-			String xml = xstream.toXML(log);
-			xml = xstream.toXML(log);
-			logFile.write(xml);
-			logFile.close(); //close the log file
-			
-			//save calendar file to hard drive
-			FileWriter dictionaryFile = new FileWriter("dictionary.txt");
-			XStream xstream2 = new XStream(new StaxDriver());
-			String xml2 = xstream.toXML(calendar);
-			xml2 = xstream2.toXML(calendar);
-			dictionaryFile.write(xml2);
-			dictionaryFile.close(); //close the log file
+			saveToDisk();
 			
 			// If other nodes need to be notified, create partial log and send
 			if(part.length > 1){
@@ -225,21 +217,7 @@ public class Node {
 			
 			timeTable[nodeID][nodeID] = clock;
 			
-			//save log file to hard drive
-			FileWriter logFile = new FileWriter("log.txt");
-			XStream xstream = new XStream(new StaxDriver());
-			String xml = xstream.toXML(log);
-			xml = xstream.toXML(log);
-			logFile.write(xml);
-			logFile.close(); //close the log file
-			
-			//save calendar file to hard drive
-			FileWriter dictionaryFile = new FileWriter("dictionary.txt");
-			XStream xstream2 = new XStream(new StaxDriver());
-			String xml2 = xstream.toXML(calendar);
-			xml2 = xstream2.toXML(calendar);
-			dictionaryFile.write(xml2);
-			dictionaryFile.close(); //close the log file
+			saveToDisk();
 			
 			//if other nodes were involved, build partial log and send
 			// If other nodes need to be notified, create partial log and send
@@ -265,24 +243,6 @@ public class Node {
 		} else { // If it wasn't found alert user
 			System.out.println("No appointment found by that name");
 		}
-	}
-	
-	//TODO do we need this method?
-	public ArrayList<Event> getLog() {
-		return log;
-	}
-
-	public void setLog(ArrayList<Event> log) {
-		this.log = log;
-	}
-
-	//TODO do we need this?
-	public ArrayList<Appointment> getCalendar() {
-		return calendar;
-	}
-
-	public void setCalendar(ArrayList<Appointment> calendar) {
-		this.calendar = calendar;
 	}
 	
 	public void printCalendar(){
@@ -372,6 +332,9 @@ public class Node {
 				}
 			}
 		}
+		
+		// Save!
+		saveToDisk();
 		
 		// update TimeTable
 		for(int i = 0; i < totalNodes; i++){
@@ -565,13 +528,14 @@ public class Node {
 		System.out.println("Which node is this? (0-3)");
 		Scanner quickscan = new Scanner(System.in);
 		int id = quickscan.nextInt();
-		Node node = new Node(4);
+		Node node = new Node(2);
 		node.setID(id);
-//		TCPListener tcplistener = new TCPListener(node);
-//		tcplistener.start();
-//		node.otherIPs.put(1, "54.152.162.118");
+		TCPListener tcplistener = new TCPListener(node);
+		tcplistener.start();
+		node.otherIPs.put(0, "52.91.27.132");
+		node.otherIPs.put(1, "54.152.162.118");
 		node.menu();
-//		tcplistener.shutDown();
+		tcplistener.shutDown();
 		quickscan.close();
 	}
 
