@@ -124,16 +124,16 @@ public class Node {
 				ArrayList<Event> partialLog = new ArrayList<Event>();
 				// Create partial log for each recipient i
 				for(int i = 0; i < part.length; i++){
-					if(nodeID != i){
+					if(nodeID != part[i]){
 						// Iterate through local log
 						for(int j = 0; j < log.size(); j++){
-							if(!hasRec(log.get(j), i)){
+							if(!hasRec(log.get(j), part[i])){
 								partialLog.add(log.get(j));
 							}
 						}
 						// Convert to XML and send
 						String sendLog = xstream.toXML(partialLog);
-						sendLog(i, sendLog);
+						sendLog(part[i], sendLog);
 						// Clear Partial Log for next recipient
 						partialLog.clear();
 					}
@@ -299,7 +299,14 @@ public class Node {
 					calendar.add(event.getAppointment());
 					Collections.sort(calendar);
 				} else {
-					// TODO:  standardize conflict resolution?
+					System.out.println("Incoming conflict, need resolution protocol");
+					// TODO:  standardize conflict resolution? create a delete event and send back?
+					/*ArrayList<Event> deleteEvent = new ArrayList<Event>();
+					clock++;
+					Event deletion = new Event(event.getAppointment(), "delete", clock, nodeID);
+					log.add(deletion);
+					String conflictResolution = xstream.toXML(log);
+					sendLog(senderID, conflictResolution);*/
 				}
 			} else {
 				// delete events
@@ -315,7 +322,7 @@ public class Node {
 		}
 		
 		// update TimeTable
-		System.out.println("Updating Time tables");
+		/*System.out.println("Updating Time tables");
 		System.out.println("Local Table:");
 		for(int i = 0; i < totalNodes; i++){
 			for(int j = 0; j < totalNodes; j++){
@@ -329,7 +336,7 @@ public class Node {
 				System.out.print(table[i][j]);
 			}
 			System.out.println("");
-		}
+		}*/
 		
 		for(int i = 0; i < totalNodes; i++){
 			timeTable[nodeID][i] = Math.max(timeTable[nodeID][i], table[senderID][i]);
@@ -535,6 +542,19 @@ public class Node {
 				System.out.println("goodbye");
 				menu = false;
 				break;
+			case 7:
+				System.out.println("Deleting local log and calendar");
+				/*try{
+					Files.delete("log.txt");
+					Files.delete("dictionary.txt");
+				} catch (NoSuchFileException x) {
+				    System.err.format("%s: no such" + " file or directory%n", path);
+				} catch (DirectoryNotEmptyException x) {
+				    System.err.format("%s not empty%n", path);
+				} catch (IOException x) {
+				    // File permission problems are caught here.
+				    System.err.println(x);
+				}*/
 			default:
 				System.out.println("please choose a valid menu option");
 				break;
