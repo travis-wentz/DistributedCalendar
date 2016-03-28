@@ -125,6 +125,27 @@ public class Node {
 			xml2 = xstream2.toXML(calendar);
 			dictionaryFile.write(xml2);
 			dictionaryFile.close(); //close the log file
+			
+			// If other nodes need to be notified, create partial log and send
+			if(part.length > 1){
+				ArrayList<Event> partialLog = new ArrayList<Event>();
+				// Create partial log for each recipient i
+				for(int i = 0; i < part.length; i++){
+					if(nodeID != i){
+						// Iterate through local log
+						for(int j = 0; j < log.size(); j++){
+							if(!hasRec(log.get(j), i)){
+								partialLog.add(log.get(j));
+							}
+						}
+						// Convert to XML and send
+						String sendLog = xstream.toXML(partialLog);
+						sendLog(i, sendLog);
+						// Clear Partial Log for next recipient
+						partialLog.clear();
+					}
+				}
+			}
 		}
 	}
 	
@@ -219,6 +240,28 @@ public class Node {
 			xml2 = xstream2.toXML(calendar);
 			dictionaryFile.write(xml2);
 			dictionaryFile.close(); //close the log file
+			
+			//if other nodes were involved, build partial log and send
+			// If other nodes need to be notified, create partial log and send
+			if(deletedAppt.getParticipants().length > 1){
+				ArrayList<Event> partialLog = new ArrayList<Event>();
+				// Create partial log for each recipient i
+				for(int i = 0; i < deletedAppt.getParticipants().length; i++){
+					if(nodeID != i){
+						// Iterate through local log
+						for(int j = 0; j < log.size(); j++){
+							if(!hasRec(log.get(j), i)){
+								partialLog.add(log.get(j));
+							}
+						}
+						// Convert to XML and send
+						String sendLog = xstream.toXML(partialLog);
+						sendLog(i, sendLog);
+						// Clear Partial Log for next recipient
+						partialLog.clear();
+					}
+				}
+			}
 		} else { // If it wasn't found alert user
 			System.out.println("No appointment found by that name");
 		}
@@ -290,6 +333,7 @@ public class Node {
 			Event event = (Event)newLog.get(i);
 			if(event.getOp().equals("insert")){
 				// Check for conflicts
+				// TODO:  standardize conflict resolution?
 				if(conflictResolution(event.getAppointment())){
 					calendar.add(event.getAppointment());
 					Collections.sort(calendar);
